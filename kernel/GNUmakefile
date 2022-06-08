@@ -35,7 +35,6 @@ override INTERNALCFLAGS :=   \
 	-mno-3dnow           \
 	-mno-sse             \
 	-mno-sse2            \
-	-mno-red-zone        \
 	-mcmodel=kernel      \
 	-MMD
 
@@ -48,7 +47,9 @@ override INTERNALLDFLAGS :=    \
 
 # Use find to glob all *.c files in the directory and extract the object names.
 override CFILES := $(shell find ./ -type f -name '*.c')
-override OBJ := $(CFILES:.c=.o)
+ASMOBJS := $(shell find ./ -type f -name '*.asm')
+override OBJ := $(CFILES:.c=.o) $(ASMOBJS:.asm=.o)
+
 override HEADER_DEPS := $(CFILES:.c=.d)
 
 # Default target.
@@ -57,12 +58,16 @@ all: $(KERNEL)
 
 limine.h:
 	curl https://raw.githubusercontent.com/limine-bootloader/limine/trunk/limine.h -o $@
-
+%.o: %.asm
+	nasm -felf64 $< -o $@
 # Link rules for the final kernel executable.
 $(KERNEL): $(OBJ)
 	$(LD) $(OBJ) $(LDFLAGS) $(INTERNALLDFLAGS) -o $@
 
 # Compilation rules for *.c files.
+
+
+
 -include $(HEADER_DEPS)
 %.o: %.c limine.h
 	$(CC) $(CFLAGS) $(INTERNALCFLAGS) -c $< -o $@
