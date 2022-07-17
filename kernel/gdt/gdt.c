@@ -22,7 +22,7 @@ typedef struct GDTPointer
 	uint64_t addr;
 } PACKED;
 
-static struct GDTEntry gentries[3];
+static uint64_t gentries[3];
 static uint8_t ent_ptr = 0;
 static struct GDTPointer gpointer;
 
@@ -56,25 +56,17 @@ static void GDTEntryNew(uint32_t base, uint32_t limit, uint8_t access, uint8_t f
 //.
 void LoadGDT()
 {
-	// NULL
-	GDTEntryNew(0, 0x0000000000000000 , ACCESS_ATTR_NULL, FLAG_ATTR_NULL);
+	
+	gentries[0] = 0x0000000000000000; // NULL.
 
-	// CODE
-	uint8_t access = ACCESS_ATTR_CODEDATA | ACCESS_ATTR_PRESENT |
-					ACCESS_ATTR_EXEC | ACCESS_ATTR_READABLE;
-	GDTEntryNew(0, 0x00af9b000000ffff, access, FLAG_ATTR_GRAN4K | FLAG_ATTR_S64B);
-
-	// DATA
-	access = ACCESS_ATTR_CODEDATA | ACCESS_ATTR_PRESENT |
-			ACCESS_ATTR_WRITABLE;
-	GDTEntryNew(0, 0x00af93000000ffff, access, FLAG_ATTR_GRAN4K | FLAG_ATTR_S32B);
-
+	gentries[1] = 0x00af9b000000ffff; // CODE.
     
+	gentries[2] = 0x00af93000000ffff; // DATA.
 
 	gpointer.addr = (uint64_t)(uintptr_t)gentries;
 	gpointer.size = sizeof(gentries) - 1;
 	printf("GPointers done\n");
-	printf("GPointer: %x\n", gpointer);
+	printf("GPointer: %l\n", gpointer);
 	printf("GEntries Table: %x || Size/Count: %d", gentries, sizeof(gentries)/sizeof(struct GDTEntry));
 	GDTInstall();
 	printf("GDT done");
